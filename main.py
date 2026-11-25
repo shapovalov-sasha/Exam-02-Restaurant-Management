@@ -22,21 +22,24 @@ class Order:
         self.items = []
 
     def add_item(self, item):
-        # TODO 1:
-        # Add the item to self.items.
-        pass
+        self.items.append(item)
 
     def calculate_subtotal(self):
-        # TODO 2:
-        # Return the sum of all item prices in this order.
-        return 0
+        subtotal = 0
+        for item in self.items:
+            subtotal += item.price
+        return subtotal
 
     def calculate_total(self):
-        # TODO 3:
-        # Meals get a 9% VAT.
-        # Drinks get a 19% VAT.
-        # Return the final total.
-        return 0
+        total = 0
+        for item in self.items:
+            if isinstance(item, Meal):
+                total += item.price * 1.09
+            elif isinstance(item, Drink):
+                total += item.price * 1.19
+            else:
+                total += item.price
+        return round(total, 2)
 
 
 class Kitchen:
@@ -45,19 +48,24 @@ class Kitchen:
         self.order_queue = []
 
     def add_order(self, order):
-        # TODO 4:
-        # Add the order to the end of the queue.
-        pass
+        self.order_queue.append(order)
 
     def prepare_next_order(self):
-        # TODO 5:
-        # 1. If the queue is empty, print a message and return None.
-        # 2. Remove the oldest order from the queue.
-        # 3. For each Meal in the order, subtract 1 from inventory
-        #    for every ingredient it uses.
-        # 4. If an ingredient drops below 0, print a warning.
-        # 5. Print that the order is ready and return the order.
-        return None
+        if not self.order_queue:
+            print("Nu exista comenzi in coada.")
+            return None
+
+        order = self.order_queue.pop(0)  # FIFO
+
+        for item in order.items:
+            if isinstance(item, Meal):
+                for ingredient in item.ingredients:
+                    self.inventory[ingredient] = self.inventory.get(ingredient, 0) - 1
+                    if self.inventory[ingredient] < 0:
+                        print(f"Avertisment: '{ingredient}' a scazut sub 0!")
+
+        print(f"Comanda pentru {order.table_name} este gata.")
+        return order
 
     def show_inventory(self):
         print("\nCurrent inventory:")
@@ -66,9 +74,10 @@ class Kitchen:
 
 
 def count_item_names(orders):
-    # OPTIONAL TASK:
-    # Return a dictionary counting how many times each item name appears.
     counts = {}
+    for order in orders:
+        for item in order.items:
+            counts[item.name] = counts.get(item.name, 0) + 1
     return counts
 
 
@@ -104,15 +113,55 @@ def run_quick_checks():
     kitchen = Kitchen({"carrots": 2, "potatoes": 1})
     kitchen.add_order(order)
 
-    # What is 'assert'?
-    # 'assert' is a testing tool. It evaluates the expression next to it.
-    # If the expression is True (e.g., your calculate_subtotal() actually returns 30), it passes silently.
-    # If it is False, it crashes with an AssertionError. This ensures your math is perfectly correct!
     assert order.calculate_subtotal() == 30
     assert round(order.calculate_total(), 2) == 33.7
     prepared = kitchen.prepare_next_order()
     assert prepared is order
     assert kitchen.inventory["carrots"] == 1
+
+
+def run_readme_example():
+    salata = Meal("Salata de Rosii", 10, ["tomatoes", "tomatoes"])
+    apa = Drink("Apa", 5, True)
+
+    order = Order("Masa 1")
+    order.add_item(salata)
+    order.add_item(apa)
+
+    kitchen = Kitchen({"tomatoes": 5, "bread": 2})
+    kitchen.add_order(order)
+
+    assert order.calculate_subtotal() == 15
+    assert order.calculate_total() == 16.85
+    kitchen.prepare_next_order()
+    assert kitchen.inventory["tomatoes"] == 3
+
+
+def run_extra_checks():
+    # FIFO
+    o1, o2 = Order("A"), Order("B")
+    kitchen = Kitchen({})
+    kitchen.add_order(o1)
+    kitchen.add_order(o2)
+    assert kitchen.prepare_next_order() is o1
+    assert kitchen.prepare_next_order() is o2
+    assert kitchen.prepare_next_order() is None
+
+    # Avertisment sub 0
+    kitchen = Kitchen({"bread": 0})
+    order = Order("C")
+    order.add_item(Meal("Pain", 5, ["bread"]))
+    kitchen.add_order(order)
+    kitchen.prepare_next_order()
+    assert kitchen.inventory["bread"] == -1
+
+    # Bonus
+    tea = Drink("Tea", 8, False)
+    o3, o4 = Order("D"), Order("E")
+    o3.add_item(tea)
+    o4.add_item(tea)
+    o4.add_item(Meal("Pain", 5, ["bread"]))
+    assert count_item_names([o3, o4]) == {"Tea": 2, "Pain": 1}
 
 
 def main():
@@ -123,11 +172,7 @@ def main():
         "tea_bags": 8,
     }
 
-    sandwich = Meal(
-        "Cheese Sandwich",
-        18,
-        ["bread", "cheese", "tomatoes"],
-    )
+    sandwich = Meal("Cheese Sandwich", 18, ["bread", "cheese", "tomatoes"])
     salad = Meal("Tomato Salad", 14, ["tomatoes", "tomatoes"])
     tea = Drink("Tea", 8, False)
 
@@ -135,7 +180,11 @@ def main():
 
     print_story_setup(starter_menu, starting_inventory)
     print_checklist()
-    print("\nAfter finishing the TODOs, run run_quick_checks() to self-test.")
+
+    run_quick_checks()
+    run_readme_example()
+    run_extra_checks()
+    print("\nToate verificarile au trecut!")
 
 
 if __name__ == "__main__":
