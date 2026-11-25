@@ -24,19 +24,30 @@ class Order:
     def add_item(self, item):
         # TODO 1:
         # Add the item to self.items.
-        pass
+        self.items.append(item)
 
     def calculate_subtotal(self):
         # TODO 2:
         # Return the sum of all item prices in this order.
-        return 0
+        subtotal = 0
+        for item in self.items:
+            subtotal += item.price
+        return subtotal
 
     def calculate_total(self):
         # TODO 3:
         # Meals get a 9% VAT.
         # Drinks get a 19% VAT.
         # Return the final total.
-        return 0
+        total = 0
+        for item in self.items:
+            if isinstance(item, Meal):
+                total += item.price * 1.09
+            elif isinstance(item, Drink):
+                total += item.price * 1.19
+            else:
+                total += item.price
+        return total
 
 
 class Kitchen:
@@ -47,7 +58,7 @@ class Kitchen:
     def add_order(self, order):
         # TODO 4:
         # Add the order to the end of the queue.
-        pass
+        self.order_queue.append(order)
 
     def prepare_next_order(self):
         # TODO 5:
@@ -57,7 +68,21 @@ class Kitchen:
         #    for every ingredient it uses.
         # 4. If an ingredient drops below 0, print a warning.
         # 5. Print that the order is ready and return the order.
-        return None
+        if not self.order_queue:
+            print("No orders in the queue.")
+            return None
+
+        order = self.order_queue.pop(0)
+
+        for item in order.items:
+            if isinstance(item, Meal):
+                for ingredient in item.ingredients:
+                    self.inventory[ingredient] = self.inventory.get(ingredient, 0) - 1
+                    if self.inventory[ingredient] < 0:
+                        print(f"Warning: {ingredient} is below 0 ({self.inventory[ingredient]})")
+
+        print(f"Order for {order.table_name} is ready.")
+        return order
 
     def show_inventory(self):
         print("\nCurrent inventory:")
@@ -69,6 +94,9 @@ def count_item_names(orders):
     # OPTIONAL TASK:
     # Return a dictionary counting how many times each item name appears.
     counts = {}
+    for order in orders:
+        for item in order.items:
+            counts[item.name] = counts.get(item.name, 0) + 1
     return counts
 
 
@@ -136,6 +164,8 @@ def main():
     print_story_setup(starter_menu, starting_inventory)
     print_checklist()
     print("\nAfter finishing the TODOs, run run_quick_checks() to self-test.")
+    run_quick_checks()
+    print("\nAll quick checks passed.")
 
 
 if __name__ == "__main__":
