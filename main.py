@@ -24,19 +24,29 @@ class Order:
     def add_item(self, item):
         # TODO 1:
         # Add the item to self.items.
-        pass
+        self.items.append(item)
 
     def calculate_subtotal(self):
         # TODO 2:
+        subtotal = 0
         # Return the sum of all item prices in this order.
-        return 0
+        for i in self.items:
+            subtotal += i.price
+        return subtotal
 
     def calculate_total(self):
         # TODO 3:
         # Meals get a 9% VAT.
         # Drinks get a 19% VAT.
         # Return the final total.
-        return 0
+        total = 0
+        for item in self.items:
+            if isinstance(item, Meal):
+                total = total + item.price * 1.09
+            elif isinstance(item, Drink):
+                total = total + item.price * 1.19
+
+        return total
 
 
 class Kitchen:
@@ -47,28 +57,39 @@ class Kitchen:
     def add_order(self, order):
         # TODO 4:
         # Add the order to the end of the queue.
-        pass
+        self.order_queue.append(order)
 
     def prepare_next_order(self):
         # TODO 5:
-        # 1. If the queue is empty, print a message and return None.
-        # 2. Remove the oldest order from the queue.
-        # 3. For each Meal in the order, subtract 1 from inventory
-        #    for every ingredient it uses.
-        # 4. If an ingredient drops below 0, print a warning.
-        # 5. Print that the order is ready and return the order.
-        return None
+
+        if not self.order_queue:
+            return None
+
+        order = self.order_queue.pop(0)
+        for item in order.items:
+            if isinstance(item, Meal):
+                for ingredient in item.ingredients:
+                    self.inventory[ingredient] -= 1
+                    if self.inventory[ingredient] < 0:
+                        print(f"Stoc negativ pentru ingrediente")
+        return order
 
     def show_inventory(self):
         print("\nCurrent inventory:")
         for name, amount in self.inventory.items():
             print(f"- {name}: {amount}")
 
-
 def count_item_names(orders):
     # OPTIONAL TASK:
     # Return a dictionary counting how many times each item name appears.
     counts = {}
+    for order in orders:
+        for item in order.items:
+            name = item.name
+            if name in counts:
+                counts[name] += 1
+            else:
+                counts[name] = 1
     return counts
 
 
