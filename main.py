@@ -24,19 +24,28 @@ class Order:
     def add_item(self, item):
         # TODO 1:
         # Add the item to self.items.
-        pass
+        self.items.append(item) ## adaug produsul in lista
 
     def calculate_subtotal(self):
         # TODO 2:
         # Return the sum of all item prices in this order.
-        return 0
+        total = 0 #pornesc totalul de la 0
+        for item in self.items: # trec prin fiecare produs din comanda
+            total += item.price #adun pretul produsului la suma
+        return total # returnez suma finala
 
     def calculate_total(self):
         # TODO 3:
         # Meals get a 9% VAT.
         # Drinks get a 19% VAT.
         # Return the final total.
-        return 0
+        total = 0 #pornesc totalul de la 0
+        for item in self.items: #trec prin fiecare produs din comanda
+            if isinstance(item, Meal): # verific daca produsul e mancare
+                total = total + item.price * 1.09 #adaug pretul cu TVA 9%
+            elif isinstance(item, Drink): #verific daca produsul e bautura
+                total = total + item.price * 1.19  #adaug pretul cu TVA 19%
+        return total # returnez totalul cu TVA
 
 
 class Kitchen:
@@ -47,7 +56,7 @@ class Kitchen:
     def add_order(self, order):
         # TODO 4:
         # Add the order to the end of the queue.
-        pass
+        self.order_queue.append(order) #pun comanda la finalul cozii
 
     def prepare_next_order(self):
         # TODO 5:
@@ -57,7 +66,21 @@ class Kitchen:
         #    for every ingredient it uses.
         # 4. If an ingredient drops below 0, print a warning.
         # 5. Print that the order is ready and return the order.
-        return None
+        if len(self.order_queue) == 0:  # verific daca coada de comenzi e goala
+            print(f"No orders in queue.") #afisez ca nu sunt comenzi
+            return None #ies din functie fara sa returnez o comanda
+
+        order = self.order_queue.pop(0) #scot cea mai veche comanda din coada (FIFO)
+
+        for item in order.items: #trec prin fiecare produs din comanda
+            if isinstance(item, Meal): #verific daca produsul e mancare
+                for ingredient in item.ingredients: # trec prin fiecare ingredient al mancarii
+                    self.inventory[ingredient] = self.inventory.get(ingredient, 0) - 1 #scad 1 din stocul ingredientului
+                    if self.inventory[ingredient] < 0: #verific daca stocul a scazut sub 0
+                        print(f"Warning: {ingredient} is below 0 !") #afisez avertisment pentru ingredient
+
+        print(f"Order for {order.table_name} is ready.") # anunt ca a fost pregatita comanda pentru masa respectiva
+        return order #returnez comanda pregatita
 
     def show_inventory(self):
         print("\nCurrent inventory:")
@@ -69,6 +92,12 @@ def count_item_names(orders):
     # OPTIONAL TASK:
     # Return a dictionary counting how many times each item name appears.
     counts = {}
+    for order in orders: # trec prin fiecare comanda din lista
+        for item in order.items: #trec prin fiecare produs din comanda
+            if item.name in counts: #verific daca produsul exista deja in dictionar
+                counts[item.name] += 1 #cresc numarul aparitiilor cu 1
+            else: #daca produsul nu aparea
+                counts[item.name] = 1 #il adaug in dictionar cu valoarea 1
     return counts
 
 
@@ -140,3 +169,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    run_quick_checks() # rulez testul
